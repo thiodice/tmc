@@ -36,6 +36,7 @@ int createTaskFile();
 void printTasks();
 void getStatusString(bool done, char* resultString);
 void addTaskToFile(const char* taskText);
+void printStatus();
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +78,15 @@ int main(int argc, char* argv[])
     addTaskToFile(taskText);
     free(taskText);
   }
+  else if (strcmp(argv[1], "status") == 0)
+  {
+    printf("%sTask Manager%s\n\n", C_BLUE, C_RESET);
+    printStatus();
+  }
+  else
+  {
+    printf("%sInvalid command: %s!%s\n", C_RED, argv[1], C_RESET);
+  }
 
   return EXIT_SUCCESS;
 }
@@ -111,7 +121,7 @@ void printTasks()
   int lineNumber = 1;
 
   FILE* file = fopen(TASK_FILE, "r");
-  while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
+  while (fgets(line, sizeof(line), file) != NULL)
   {
     char* taskText = strtok(line, SPLIT_TOKEN);
 
@@ -154,5 +164,39 @@ void addTaskToFile(const char* taskText)
   FILE* file = fopen(TASK_FILE, "a");
 
   fprintf(file, "%s%%%d\n", taskText, 0);
+  fclose(file);
+}
+
+void printStatus()
+{
+  FILE* file = fopen(TASK_FILE, "r");
+
+  char line[MAX_LINE_LENGTH];
+  int taskCount = 0;
+  int doneCount = 0;
+  int missingCount = 0;
+
+  while (fgets(line, sizeof(line), file))
+  {
+    char* taskText = strtok(line, SPLIT_TOKEN);
+
+    if (taskText != NULL)
+    {
+      char* statusPart = strtok(NULL, SPLIT_TOKEN);
+
+      if (statusPart != NULL)
+      {
+        int status = atoi(statusPart);
+        status ? doneCount++ : missingCount++;
+      }
+    }
+
+    taskCount++;
+  }
+
+  printf("Total tasks:   %s%d%s\n", C_YELLOW, taskCount, C_RESET);
+  printf("Done tasks:    %s%d%s\n", C_GREEN, doneCount, C_RESET);
+  printf("Missing tasks: %s%d%s\n", C_RED, missingCount, C_RESET);
+
   fclose(file);
 }
