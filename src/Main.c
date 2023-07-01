@@ -15,28 +15,18 @@ const char* C_CYAN    = "\e[0;36m";
 const char* C_WHITE   = "\e[0;37m";
 const char* C_RESET   = "\e[0m";
 
-const char* TASKS[] = {
-  "Task 1",
-  "Task 2",
-  "Task 3",
-};
-const bool TASKS_DONE[] = {
-  true,
-  true,
-  false,
-};
-const int NUM_TASKS = sizeof(TASKS) / sizeof(TASKS[0]);
-
-const char* TASK_FILE = "./data/tasks.txt";
+const char*        TASK_FILE       = "./data/tasks.txt";
+const char*        TEMP_FILE       = "./data/temp.txt";
 const unsigned int MAX_LINE_LENGTH = 128;
-const char* SPLIT_TOKEN = "%";
+const char*        SPLIT_TOKEN     = "%";
 
-int createDataDirectory();
-int createTaskFile();
+int  createDataDirectory();
+int  createTaskFile();
 void printTasks();
 void getStatusString(bool done, char* resultString);
 void addTaskToFile(const char* taskText);
-int changeTaskStatus(const unsigned int id, const bool newStatus);
+int  changeTaskStatus(const unsigned int id, const bool newStatus);
+int  deleteTask(const unsigned int id);
 void printStatus();
 
 int main(int argc, char* argv[])
@@ -45,7 +35,7 @@ int main(int argc, char* argv[])
   {
     printf("Failed to create the data folder!\n");
     return 1;
-  }
+   }
 
   if (createTaskFile() == 1)
   {
@@ -92,6 +82,7 @@ int main(int argc, char* argv[])
       printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
       return EXIT_FAILURE;
     }
+
     return changeTaskStatus(taskId, 1);
   }
   else if (strcmp(argv[1], "undone") == 0)
@@ -107,7 +98,24 @@ int main(int argc, char* argv[])
       printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
       return EXIT_FAILURE;
     }
+
     return changeTaskStatus(taskId, 0);
+  }
+  else if (strcmp(argv[1], "delete") == 0)
+  {
+    if (argc < 3)
+    {
+      printf("%sMissing task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+
+    int taskId = atoi(argv[2]);
+    if (taskId <= 0) {
+      printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+
+    return deleteTask(taskId);
   }
   else if (strcmp(argv[1], "status") == 0)
   {
@@ -151,7 +159,7 @@ void printTasks()
   char line[MAX_LINE_LENGTH];
   int lineNumber = 1;
 
-  FILE* file = fopen(TASK_FILE, "r");
+  FILE* file = fopen(TASK_FILE, "r+");
   while (fgets(line, sizeof(line), file) != NULL)
   {
     char* taskText = strtok(line, SPLIT_TOKEN);
@@ -231,6 +239,63 @@ int changeTaskStatus(const unsigned int id, const bool newStatus)
   }
 
   fclose(file);
+  return 0;
+}
+
+int deleteTask(const unsigned int id)
+{
+  FILE* file = fopen(TASK_FILE, "r");
+  FILE* tempFile = fopen(TEMP_FILE, "w");
+
+  if (tempFile == NULL)
+  {
+    printf("%sFailed to create temporary file!%s\n", C_RED, C_RESET);
+    fclose(file);
+    return 1;
+  }
+
+  int taskId = 1;
+  char line[MAX_LINE_LENGTH];
+  bool found = false;
+
+  while (fgets(line, sizeof(line), file))
+  {
+    if (taskId != id)
+    {
+        fputs(line, tempFile);
+    }
+    else
+    {
+      found = true;
+    }
+    taskId++;
+  }
+
+  fclose(file);
+  fclose(tempFile);
+
+  if (!found)
+  {
+    printf("%sTask with this ID does not exist!%s\n", C_RED, C_RESET);
+    if (remove(TEMP_FILE) != 0)
+    {
+      printf("%sFailed to remove the temporary file!%s\n", C_RED, C_RESET);
+    }
+    return 1;
+  }
+
+  if (remove(TASK_FILE) != 0)
+  {
+    printf("%sFailed to remove the file!%s\n", C_RED, C_RESET);
+    return 1;
+  }
+
+  if (rename(TEMP_FILE, TASK_FILE) != 0)
+  {
+    printf("%sFailed to rename the file!%s\n", C_RED, C_RESET);
+    return 1;
+  }
+
   return 0;
 }
 
