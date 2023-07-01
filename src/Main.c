@@ -36,6 +36,7 @@ int createTaskFile();
 void printTasks();
 void getStatusString(bool done, char* resultString);
 void addTaskToFile(const char* taskText);
+int markTaskDone(const unsigned int id);
 void printStatus();
 
 int main(int argc, char* argv[])
@@ -77,6 +78,21 @@ int main(int argc, char* argv[])
 
     addTaskToFile(taskText);
     free(taskText);
+  }
+  else if (strcmp(argv[1], "done") == 0)
+  {
+    if (argc < 3)
+    {
+      printf("%sMissing task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+
+    int taskId = atoi(argv[2]);
+    if (taskId <= 0) {
+      printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+    return markTaskDone(taskId);
   }
   else if (strcmp(argv[1], "status") == 0)
   {
@@ -124,18 +140,15 @@ void printTasks()
   while (fgets(line, sizeof(line), file) != NULL)
   {
     char* taskText = strtok(line, SPLIT_TOKEN);
+    if (taskText == NULL) return;
 
-    if (taskText != NULL)
+    char* statusPart = strtok(NULL, SPLIT_TOKEN);
+    if (statusPart != NULL)
     {
-      char* statusPart = strtok(NULL, SPLIT_TOKEN);
-
-      if (statusPart != NULL)
-      {
-        int status = atoi(statusPart);
-        char statusString[32];
-        getStatusString(status, statusString);
-        printf("%d) %s %s\n", lineNumber, taskText, statusString);
-      }
+      int status = atoi(statusPart);
+      char statusString[32];
+      getStatusString(status, statusString);
+      printf("%d) %s %s\n", lineNumber, taskText, statusString);
     }
 
     lineNumber++;
@@ -167,6 +180,45 @@ void addTaskToFile(const char* taskText)
   fclose(file);
 }
 
+int markTaskDone(const unsigned int id)
+{
+  FILE* file = fopen(TASK_FILE, "r+");
+
+  char line[MAX_LINE_LENGTH];
+  int lineNumber = 1;
+  bool found = false;
+
+  while (fgets(line, sizeof(line), file))
+  {
+    char* taskText = strtok(line, SPLIT_TOKEN);
+    if (taskText == NULL) return 1;
+
+    char* statusPart = strtok(NULL, SPLIT_TOKEN);
+    if (statusPart != NULL)
+    {
+      int status = atoi(statusPart);
+      if (id == lineNumber)
+      {
+        status = 1;
+        fseek(file, -strlen(statusPart), SEEK_CUR);
+        fprintf(file, "%d", status);
+        found = true;
+      }
+    }
+
+    lineNumber++;
+  }
+
+  if (!found)
+  {
+    printf("%sTask with this ID does not exist!%s\n", C_RED, C_RESET);
+    return 1;
+  }
+
+  fclose(file);
+  return 0;
+}
+
 void printStatus()
 {
   FILE* file = fopen(TASK_FILE, "r");
@@ -179,16 +231,13 @@ void printStatus()
   while (fgets(line, sizeof(line), file))
   {
     char* taskText = strtok(line, SPLIT_TOKEN);
+    if (taskText == NULL) return;
 
-    if (taskText != NULL)
+    char* statusPart = strtok(NULL, SPLIT_TOKEN);
+    if (statusPart != NULL)
     {
-      char* statusPart = strtok(NULL, SPLIT_TOKEN);
-
-      if (statusPart != NULL)
-      {
-        int status = atoi(statusPart);
-        status ? doneCount++ : missingCount++;
-      }
+      int status = atoi(statusPart);
+      status ? doneCount++ : missingCount++;
     }
 
     taskCount++;
