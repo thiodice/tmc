@@ -7,11 +7,14 @@
 #include <stdbool.h>
 #include <string.h>
 
-void printTasks();
+#include "Data.h"
+
+int  printTasks();
 void getStatusString(bool done, char* resultString);
-void addTaskToFile(const char* taskText);
+int  addTaskToFile(const char* taskText);
 int  changeTaskStatus(const unsigned int id, const bool newStatus);
 int  deleteTask(const unsigned int id);
-void printStatus();
+int  printStatus();
+int  handleCommand(int argc, char* argv[]);
 
 #endif // COMMANDS_H

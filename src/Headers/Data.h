@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int  createDataDirectory();
-int  createTaskFile();
+int createDataDirectory();
+int createTaskFile();
 
 #endif // DATA_H
