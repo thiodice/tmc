@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 const char* C_BLACK   = "\e[0;30m";
 const char* C_RED     = "\e[0;31m";
@@ -16,14 +18,33 @@ const char* TASKS[] = {
   "Task 2",
   "Task 3",
 };
+const bool TASKS_DONE[] = {
+  true,
+  true,
+  false,
+};
+
+void getStatusString(bool done, char* resultString);
 
 int main()
 {
   printf("%sTask Manager%s\n\n", C_BLUE, C_RESET);
   for (int i = 0; i < 3; i++)
   {
-    printf("%d) %s %s✗%s\n", i + 1, TASKS[i], C_RED, C_RESET);
+    char statusString[64];
+    getStatusString(TASKS_DONE[i], statusString);
+    printf("%d) %s %s\n", i + 1, TASKS[i], statusString);
   }
 
   return EXIT_SUCCESS;
+}
+
+void getStatusString(bool done, char* resultString)
+{
+  const char* colorString = done ? C_GREEN : C_RED;
+  const char* statusString = done ? "✓" : "✗";
+
+  strcpy(resultString, colorString);
+  strcat(resultString, statusString);
+  strcat(resultString, C_RESET);
 }
