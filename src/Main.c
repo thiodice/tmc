@@ -36,7 +36,7 @@ int createTaskFile();
 void printTasks();
 void getStatusString(bool done, char* resultString);
 void addTaskToFile(const char* taskText);
-int markTaskDone(const unsigned int id);
+int changeTaskStatus(const unsigned int id, const bool newStatus);
 void printStatus();
 
 int main(int argc, char* argv[])
@@ -92,7 +92,22 @@ int main(int argc, char* argv[])
       printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
       return EXIT_FAILURE;
     }
-    return markTaskDone(taskId);
+    return changeTaskStatus(taskId, 1);
+  }
+  else if (strcmp(argv[1], "undone") == 0)
+  {
+    if (argc < 3)
+    {
+      printf("%sMissing task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+
+    int taskId = atoi(argv[2]);
+    if (taskId <= 0) {
+      printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+    return changeTaskStatus(taskId, 0);
   }
   else if (strcmp(argv[1], "status") == 0)
   {
@@ -180,7 +195,7 @@ void addTaskToFile(const char* taskText)
   fclose(file);
 }
 
-int markTaskDone(const unsigned int id)
+int changeTaskStatus(const unsigned int id, const bool newStatus)
 {
   FILE* file = fopen(TASK_FILE, "r+");
 
@@ -199,7 +214,7 @@ int markTaskDone(const unsigned int id)
       int status = atoi(statusPart);
       if (id == lineNumber)
       {
-        status = 1;
+        status = newStatus;
         fseek(file, -strlen(statusPart), SEEK_CUR);
         fprintf(file, "%d", status);
         found = true;
@@ -226,7 +241,7 @@ void printStatus()
   char line[MAX_LINE_LENGTH];
   int taskCount = 0;
   int doneCount = 0;
-  int missingCount = 0;
+  int undoneCount = 0;
 
   while (fgets(line, sizeof(line), file))
   {
@@ -237,7 +252,7 @@ void printStatus()
     if (statusPart != NULL)
     {
       int status = atoi(statusPart);
-      status ? doneCount++ : missingCount++;
+      status ? doneCount++ : undoneCount++;
     }
 
     taskCount++;
@@ -245,7 +260,7 @@ void printStatus()
 
   printf("Total tasks:   %s%d%s\n", C_YELLOW, taskCount, C_RESET);
   printf("Done tasks:    %s%d%s\n", C_GREEN, doneCount, C_RESET);
-  printf("Missing tasks: %s%d%s\n", C_RED, missingCount, C_RESET);
+  printf("Undone tasks:  %s%d%s\n", C_RED, undoneCount, C_RESET);
 
   fclose(file);
 }
