@@ -28,17 +28,17 @@ const bool TASKS_DONE[] = {
 const int NUM_TASKS = sizeof(TASKS) / sizeof(TASKS[0]);
 
 const char* TASK_FILE = "./data/tasks.txt";
+const unsigned int MAX_LINE_LENGTH = 128;
 const char* SPLIT_TOKEN = "%";
 
 int createDataDirectory();
 int createTaskFile();
 void printTasks();
 void getStatusString(bool done, char* resultString);
+void addTaskToFile(const char* taskText);
 
-int main()
+int main(int argc, char* argv[])
 {
-  printf("%sTask Manager%s\n\n", C_BLUE, C_RESET);
-
   if (createDataDirectory() == 1)
   {
     printf("Failed to create the data folder!\n");
@@ -51,7 +51,32 @@ int main()
     return 1;
   }
 
-  printTasks();
+  if (argc == 1)
+  {
+    printf("%sTask Manager%s\n\n", C_BLUE, C_RESET);
+    printTasks();
+    return EXIT_SUCCESS;
+  }
+
+  if (strcmp(argv[1], "add") == 0)
+  {
+    if (argc < 3)
+    {
+      printf("%sMissing task text!%s\n", C_RED, C_RESET);
+      return EXIT_FAILURE;
+    }
+    char* taskText = malloc(MAX_LINE_LENGTH * sizeof(char));
+    strcpy(taskText, argv[2]);
+
+    for (int i = 3; i < argc; i++)
+    {
+      strcat(taskText, " ");
+      strcat(taskText, argv[i]);
+    }
+
+    addTaskToFile(taskText);
+    free(taskText);
+  }
 
   return EXIT_SUCCESS;
 }
@@ -82,18 +107,20 @@ int createTaskFile()
 
 void printTasks()
 {
-  const int maxLineLength = 128;
-  char line[maxLineLength];
+  char line[MAX_LINE_LENGTH];
   int lineNumber = 1;
 
   FILE* file = fopen(TASK_FILE, "r");
-  while (fgets(line, maxLineLength, file) != NULL) {
+  while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
+  {
     char* taskText = strtok(line, SPLIT_TOKEN);
 
-    if (taskText != NULL) {
+    if (taskText != NULL)
+    {
       char* statusPart = strtok(NULL, SPLIT_TOKEN);
 
-      if (statusPart != NULL) {
+      if (statusPart != NULL)
+      {
         int status = atoi(statusPart);
         char statusString[32];
         getStatusString(status, statusString);
@@ -102,6 +129,11 @@ void printTasks()
     }
 
     lineNumber++;
+  }
+
+  if (lineNumber == 1)
+  {
+    printf("%sYou have no tasks added!%s\n", C_RED, C_RESET);
   }
 
   fclose(file);
@@ -115,4 +147,12 @@ void getStatusString(bool done, char* resultString)
   strcpy(resultString, colorString);
   strcat(resultString, statusString);
   strcat(resultString, C_RESET);
+}
+
+void addTaskToFile(const char* taskText)
+{
+  FILE* file = fopen(TASK_FILE, "a");
+
+  fprintf(file, "%s%%%d\n", taskText, 0);
+  fclose(file);
 }
