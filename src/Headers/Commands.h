@@ -14,6 +14,7 @@ void getStatusString(bool done, char* resultString);
 int  addTaskToFile(const char* taskText);
 int  changeTaskStatus(const unsigned int id, const bool newStatus);
 int  deleteTask(const unsigned int id, const unsigned int originalId);
+int  deleteAllTasks();
 int  printStatus();
 int  handleCommand(int argc, char* argv[]);
 

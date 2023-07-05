@@ -144,7 +144,7 @@ int deleteTask(const unsigned int id, const unsigned int originalId)
   {
     if (taskId != id)
     {
-        fputs(line, tempFile);
+      fputs(line, tempFile);
     }
     else
     {
@@ -177,6 +177,19 @@ int deleteTask(const unsigned int id, const unsigned int originalId)
     printf("%sFailed to rename the file!%s\n", C_RED, C_RESET);
     return EXIT_FAILURE;
   }
+
+  return EXIT_SUCCESS;
+}
+
+int deleteAllTasks()
+{
+  const char *homeDir = getenv("HOME");
+  char taskPath[96];
+
+  snprintf(taskPath, sizeof(taskPath), "%s/%s/%s", homeDir, DATA_FOLDER, TASK_FILE);
+
+  FILE* file = fopen(taskPath, "w");
+  fclose(file);
 
   return EXIT_SUCCESS;
 }
@@ -298,8 +311,21 @@ int handleCommand(int argc, char* argv[])
   {
     if (argc < 3)
     {
-      printf("%sMissing task ID!%s\n", C_RED, C_RESET);
-      return EXIT_FAILURE;
+      char input[64];
+      printf("%sDo you wish to delete all your tasks? [y/N]%s\n", C_BLUE, C_RESET);
+      printf("> ");
+      fgets(input, 64, stdin);
+
+      if (input[0] == 'y' || input[0] == 'Y') {
+        printf("All your tasks were deleted successfully.\n");
+        return deleteAllTasks();
+      } else if (input[0] != '\n' && input[0] != 'n' && input[0] != 'N') {
+        printf("%sInvalid response!%s\n", C_RED, C_RESET);
+        return EXIT_FAILURE;
+      }
+
+      printf("No tasks were deleted.\n");
+      return EXIT_SUCCESS;
     }
 
     int taskId = atoi(argv[2]);
