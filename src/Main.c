@@ -4,11 +4,11 @@
 #include "Headers/Data.h"
 #include "Headers/Commands.h"
 
-const char* C_RED     = "\e[0;31m";
-const char* C_GREEN   = "\e[0;32m";
-const char* C_YELLOW  = "\e[0;33m";
-const char* C_BLUE    = "\e[0;34m";
-const char* C_RESET   = "\e[0m";
+const char* C_RED    = "\e[0;31m";
+const char* C_GREEN  = "\e[0;32m";
+const char* C_YELLOW = "\e[0;33m";
+const char* C_BLUE   = "\e[0;34m";
+const char* C_RESET  = "\e[0m";
 
 const char*        DATA_FOLDER     = "tmc_data";
 const char*        TASK_FILE       = "tasks.txt";

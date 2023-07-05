@@ -109,7 +109,7 @@ int changeTaskStatus(const unsigned int id, const bool newStatus)
 
   if (!found)
   {
-    printf("%sTask with this ID does not exist!%s\n", C_RED, C_RESET);
+    printf("%sTask with this ID (%d) does not exist!%s\n", C_RED, id, C_RESET);
     return EXIT_FAILURE;
   }
 
@@ -117,7 +117,7 @@ int changeTaskStatus(const unsigned int id, const bool newStatus)
   return EXIT_SUCCESS;
 }
 
-int deleteTask(const unsigned int id)
+int deleteTask(const unsigned int id, const unsigned int originalId)
 {
   const char *homeDir = getenv("HOME");
   char taskPath[96];
@@ -158,7 +158,7 @@ int deleteTask(const unsigned int id)
 
   if (!found)
   {
-    printf("%sTask with this ID does not exist!%s\n", C_RED, C_RESET);
+    printf("%sTask with this ID (%d) does not exist!%s\n", C_RED, originalId, C_RESET);
     if (remove(tempPath) != 0)
     {
       printf("%sFailed to remove the temporary file!%s\n", C_RED, C_RESET);
@@ -254,13 +254,21 @@ int handleCommand(int argc, char* argv[])
       return EXIT_FAILURE;
     }
 
-    int taskId = atoi(argv[2]);
-    if (taskId <= 0) {
-      printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
-      return EXIT_FAILURE;
+    bool success = true;
+    for (int i = 2; i < argc; i++)
+    {
+      int taskId = atoi(argv[i]);
+
+      if (taskId <= 0)
+      {
+        printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+        continue;
+      }
+
+      success = changeTaskStatus(taskId, 1);
     }
 
-    return changeTaskStatus(taskId, 1);
+    return success;
   }
   else if (strcmp(argv[1], "undone") == 0)
   {
@@ -270,13 +278,21 @@ int handleCommand(int argc, char* argv[])
       return EXIT_FAILURE;
     }
 
-    int taskId = atoi(argv[2]);
-    if (taskId <= 0) {
-      printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
-      return EXIT_FAILURE;
+    bool success = true;
+    for (int i = 2; i < argc; i++)
+    {
+      int taskId = atoi(argv[i]);
+
+      if (taskId <= 0)
+      {
+        printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+        continue;
+      }
+
+      success = changeTaskStatus(taskId, 0);
     }
 
-    return changeTaskStatus(taskId, 0);
+    return success;
   }
   else if (strcmp(argv[1], "delete") == 0)
   {
@@ -287,12 +303,29 @@ int handleCommand(int argc, char* argv[])
     }
 
     int taskId = atoi(argv[2]);
-    if (taskId <= 0) {
+    if (taskId <= 0)
+    {
       printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
       return EXIT_FAILURE;
     }
 
-    return deleteTask(taskId);
+    bool success = true;
+    for (int i = 2; i < argc; i++)
+    {
+      int fixingAddition = i >= 3 && atoi(argv[i]) < atoi(argv[i - 1]) ? 0 : -i + 2; 
+      int taskId = atoi(argv[i]) + fixingAddition;
+      int originalId = atoi(argv[i]);
+
+      if (taskId <= 0)
+      {
+        printf("%sInvalid task ID!%s\n", C_RED, C_RESET);
+        continue;
+      }
+
+      success = deleteTask(taskId, originalId);
+    }
+
+    return success;
   }
   else if (strcmp(argv[1], "status") == 0)
   {
